@@ -220,6 +220,9 @@
         },
         "password": {
           "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/userUserRole"
         }
       }
     },
@@ -234,8 +237,20 @@
         },
         "email": {
           "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/userUserRole"
         }
       }
+    },
+    "userUserRole": {
+      "type": "string",
+      "enum": [
+        "USER_ROLE_UNSPECIFIED",
+        "USER_ROLE_ADMIN",
+        "USER_ROLE_REGULAR"
+      ],
+      "default": "USER_ROLE_UNSPECIFIED"
     }
   }
 }
