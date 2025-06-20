@@ -248,7 +248,7 @@
       "enum": [
         "USER_ROLE_UNSPECIFIED",
         "USER_ROLE_ADMIN",
-        "USER_ROLE_REGULAR"
+        "USER_ROLE_OPERATION"
       ],
       "default": "USER_ROLE_UNSPECIFIED"
     }

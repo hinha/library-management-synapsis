@@ -10,7 +10,7 @@ option go_package = "github.com/hinha/library-management-synapsis/gen/user";
 enum UserRole {
   USER_ROLE_UNSPECIFIED = 0;
   USER_ROLE_ADMIN = 1;
-  USER_ROLE_REGULAR = 2;
+  USER_ROLE_OPERATION = 2;
 }
 
 service UserService {
