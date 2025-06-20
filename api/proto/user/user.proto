@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package user;
+
+import "google/api/annotations.proto";
+import "google/protobuf/field_mask.proto";
+
+option go_package = "github.com/hinha/library-management-synapsis/gen/user";
+
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_ADMIN = 1;
+  USER_ROLE_REGULAR = 2;
+}
+
+service UserService {
+  rpc Register(RegisterRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      post: "/api/users/register"
+      body: "*"
+    };
+  }
+
+  rpc Login(LoginRequest) returns (LoginResponse) {
+    option (google.api.http) = {
+      post: "/api/users/login"
+      body: "*"
+    };
+  }
+
+  rpc Update(UpdateUserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      patch: "/api/users/{id}"
+      body: "*"
+    };
+  }
+
+  rpc Get(GetUserRequest) returns (UserResponse) {
+    option (google.api.http) = {
+      get: "/api/users/{id}"
+    };
+  }
+}
+
+message RegisterRequest {
+  string name = 1;
+  string email = 2;
+  string password = 3;
+  UserRole role = 4;
+}
+
+message LoginRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  google.protobuf.FieldMask update_mask = 2;
+  string name = 3;
+  string email = 4;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message UserResponse {
+  string id = 1;
+  string name = 2;
+  string email = 3;
+  UserRole role = 4;
+}
+
+message LoginResponse {
+  string token = 1;
+}
