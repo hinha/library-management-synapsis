@@ -1,6 +1,11 @@
 package config
 
-import "os"
+import (
+	"github.com/joho/godotenv"
+	"os"
+)
+
+var _ = godotenv.Load(".env")
 
 // GetEnv retrieves an environment variable or returns a default value if not found
 func GetEnv(key, defaultValue string) string {
@@ -27,6 +32,12 @@ type ServiceConfig struct {
 	// JWT configuration (for user service)
 	JwtSecret string
 }
+
+var (
+	LogDebug             = GetEnv("LOG_DEBUG", "false") == "true"
+	InitialAdminEmail    = GetEnv("INITIAL_ADMIN_EMAIL", "")
+	InitialAdminPassword = GetEnv("INITIAL_ADMIN_PASSWORD", "")
+)
 
 // LoadUserServiceConfig loads configuration for the user service
 func LoadUserServiceConfig() ServiceConfig {

@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package common;
+
+option go_package = "github.com/hinha/library-management-synapsis/gen/common";
+
+message FieldValidationError {
+  string field = 1;
+  string message = 2;
+}

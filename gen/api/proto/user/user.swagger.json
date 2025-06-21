@@ -206,6 +206,9 @@
       "properties": {
         "token": {
           "type": "string"
+        },
+        "expiredAt": {
+          "type": "string"
         }
       }
     },
