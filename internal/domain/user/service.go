@@ -1,0 +1,164 @@
+package user
+
+import (
+	"context"
+	"errors"
+	"strconv"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+)
+
+var (
+	// ErrInvalidCredentials is returned when the provided credentials are invalid
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	// ErrUnauthorized is returned when a user is not authorized to perform an action
+	ErrUnauthorized = errors.New("unauthorized")
+)
+
+// JWTConfig contains configuration for JWT token generation
+type JWTConfig struct {
+	SecretKey     string
+	TokenDuration time.Duration
+}
+
+// Service defines the interface for user business logic
+type Service interface {
+	Register(ctx context.Context, name, email, password string, isAdmin bool) (*User, error)
+	Login(ctx context.Context, email, password string) (string, string, error)
+	GetUser(ctx context.Context, id string) (*User, error)
+	UpdateUser(ctx context.Context, id, name, email string) (*User, error)
+	ValidateToken(token string) (*Claims, error)
+}
+
+// Claims represents the JWT claims
+type Claims struct {
+	UserID string `json:"user_id"`
+	Email  string `json:"email"`
+	Role   string `json:"role"`
+	jwt.RegisteredClaims
+}
+
+// DefaultService implements Service
+type DefaultService struct {
+	repo      IRepository
+	jwtConfig JWTConfig
+}
+
+// NewService creates a new DefaultService
+func NewService(repo IRepository, jwtConfig JWTConfig) *DefaultService {
+	return &DefaultService{
+		repo:      repo,
+		jwtConfig: jwtConfig,
+	}
+}
+
+// Register registers a new user
+func (s *DefaultService) Register(ctx context.Context, name, email, password string, isAdmin bool) (*User, error) {
+	var role Role
+	if isAdmin {
+		role = RoleAdmin
+	} else {
+		role = RoleOperation
+	}
+
+	user, err := NewUser(name, email, password, role)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := s.repo.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// Login authenticates a user and returns a JWT token
+func (s *DefaultService) Login(ctx context.Context, email, password string) (string, string, error) {
+	user, err := s.repo.GetByEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return "", "", ErrInvalidCredentials
+		}
+		return "", "", err
+	}
+
+	if !user.ComparePassword(password) {
+		return "", "", ErrInvalidCredentials
+	}
+
+	// Generate JWT token
+	expiresAt := time.Now().Add(s.jwtConfig.TokenDuration)
+	claims := &Claims{
+		UserID: strconv.Itoa(int(user.ID)),
+		Email:  user.Email,
+		Role:   string(user.Role),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString([]byte(s.jwtConfig.SecretKey))
+	if err != nil {
+		return "", "", err
+	}
+
+	return signedToken, expiresAt.String(), nil
+}
+
+// GetUser retrieves a user by ID
+func (s *DefaultService) GetUser(ctx context.Context, id string) (*User, error) {
+	return s.repo.GetByID(ctx, id)
+}
+
+// UpdateUser updates a user's information
+func (s *DefaultService) UpdateUser(ctx context.Context, id, name, email string) (*User, error) {
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if name != "" {
+		user.Name = name
+	}
+
+	if email != "" && email != user.Email {
+		// Check if email is already taken
+		_, err := s.repo.GetByEmail(ctx, email)
+		if err == nil {
+			return nil, ErrEmailAlreadyExists
+		} else if !errors.Is(err, ErrUserNotFound) {
+			return nil, err
+		}
+		user.Email = email
+	}
+
+	user.UpdatedAt = time.Now()
+
+	if err := s.repo.Update(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// ValidateToken validates a JWT token and returns the claims
+func (s *DefaultService) ValidateToken(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.jwtConfig.SecretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !token.Valid {
+		return nil, ErrUnauthorized
+	}
+
+	return claims, nil
+}

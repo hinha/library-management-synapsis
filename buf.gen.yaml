@@ -12,3 +12,9 @@ plugins:
   - name: openapiv2
     out: gen
     opt: logtostderr=true
+  - name: gotag
+    out: gen
+    opt:
+      - outdir=gen
+      - paths=source_relative
+      - option=validate
