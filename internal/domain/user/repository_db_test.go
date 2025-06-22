@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	"github.com/hinha/library-management-synapsis/internal/domain"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"testing"
@@ -65,13 +66,13 @@ func TestDBRepository_Create(t *testing.T) {
 	}
 	testCases := []struct {
 		name          string
-		user          *User
+		user          *domain.User
 		fields        fields
 		expectedError error
 	}{
 		{
 			name: "Success",
-			user: &User{Email: "test@example.com", Name: "Test User"},
+			user: &domain.User{Email: "test@example.com", Name: "Test User"},
 			fields: fields{
 				setupMock: func(mock sqlmock.Sqlmock) {
 					mock.ExpectQuery(`SELECT count(.*) FROM "users" WHERE email = .*`).
@@ -86,7 +87,7 @@ func TestDBRepository_Create(t *testing.T) {
 		},
 		{
 			name: "Email Already Exists",
-			user: &User{Email: "existing@example.com", Name: "Existing User"},
+			user: &domain.User{Email: "existing@example.com", Name: "Existing User"},
 			fields: fields{
 				setupMock: func(mock sqlmock.Sqlmock) {
 					mock.ExpectQuery(`SELECT count(.*) FROM "users" WHERE email = .*`).
@@ -97,7 +98,7 @@ func TestDBRepository_Create(t *testing.T) {
 		},
 		{
 			name: "Database Error on Count",
-			user: &User{Email: "errorcount@example.com", Name: "Error Count"},
+			user: &domain.User{Email: "errorcount@example.com", Name: "Error Count"},
 			fields: fields{
 				setupMock: func(mock sqlmock.Sqlmock) {
 					mock.ExpectQuery(`SELECT count(.*) FROM "users" WHERE email = .*`).
@@ -108,7 +109,7 @@ func TestDBRepository_Create(t *testing.T) {
 		},
 		{
 			name: "Database Error on Create",
-			user: &User{Email: "errorcreate@example.com", Name: "Error Create"},
+			user: &domain.User{Email: "errorcreate@example.com", Name: "Error Create"},
 			fields: fields{
 				setupMock: func(mock sqlmock.Sqlmock) {
 					mock.ExpectQuery(`SELECT count(.*) FROM "users" WHERE email = .*`).
@@ -161,7 +162,7 @@ func TestDBRepository_GetByID(t *testing.T) {
 		name          string
 		id            string
 		fields        fields
-		expectedUser  *User
+		expectedUser  *domain.User
 		expectedError error
 	}{
 		{
@@ -176,7 +177,7 @@ func TestDBRepository_GetByID(t *testing.T) {
 						WillReturnRows(rows)
 				},
 			},
-			expectedUser: &User{
+			expectedUser: &domain.User{
 				ID:        1,
 				Email:     "test@example.com",
 				Name:      "Test User",
@@ -256,7 +257,7 @@ func TestDBRepository_GetByEmail(t *testing.T) {
 		name          string
 		email         string
 		fields        fields
-		expectedUser  *User
+		expectedUser  *domain.User
 		expectedError error
 	}{
 		{
@@ -271,7 +272,7 @@ func TestDBRepository_GetByEmail(t *testing.T) {
 						WillReturnRows(rows)
 				},
 			},
-			expectedUser: &User{
+			expectedUser: &domain.User{
 				ID:        1,
 				Email:     "test@example.com",
 				Name:      "Test User",
@@ -360,13 +361,13 @@ func TestDBRepository_Update(t *testing.T) {
 	}
 	testCases := []struct {
 		name          string
-		user          *User
+		user          *domain.User
 		fields        fields
 		expectedError error
 	}{
 		{
 			name: "Success",
-			user: &User{
+			user: &domain.User{
 				ID:        1,
 				Email:     "updated@example.com",
 				Name:      "Updated User",
@@ -401,7 +402,7 @@ func TestDBRepository_Update(t *testing.T) {
 		//},
 		{
 			name: "Database Error",
-			user: &User{
+			user: &domain.User{
 				ID:        2,
 				Email:     "error@example.com",
 				Name:      "Error User",

@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"errors"
+	domain2 "github.com/hinha/library-management-synapsis/internal/domain"
 	"github.com/hinha/library-management-synapsis/pkg/validator"
 	"github.com/rs/zerolog/log"
 	"strings"
@@ -84,13 +85,13 @@ func (h *UserHandler) Get(ctx context.Context, req *pb.GetUserRequest) (*pb.User
 	}
 
 	token := strings.TrimPrefix(authHeader[0], "Bearer ")
-	claims, err := h.service.ValidateToken(token)
+	claims, err := h.service.ValidateToken(ctx, token)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid token")
 	}
 
 	// Check if user is requesting their own data or is an admin
-	if claims.UserID != req.GetId() && claims.Role != string(domain.RoleAdmin) {
+	if claims.UserID != req.GetId() && claims.Role != string(domain2.RoleAdmin) {
 		return nil, status.Error(codes.PermissionDenied, "permission denied")
 	}
 
@@ -119,13 +120,13 @@ func (h *UserHandler) Update(ctx context.Context, req *pb.UpdateUserRequest) (*p
 	}
 
 	token := strings.TrimPrefix(authHeader[0], "Bearer ")
-	claims, err := h.service.ValidateToken(token)
+	claims, err := h.service.ValidateToken(ctx, token)
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid token")
 	}
 
 	// Check if user is updating their own data or is an admin
-	if claims.UserID != req.GetId() && claims.Role != string(domain.RoleAdmin) {
+	if claims.UserID != req.GetId() && claims.Role != string(domain2.RoleAdmin) {
 		return nil, status.Error(codes.PermissionDenied, "permission denied")
 	}
 

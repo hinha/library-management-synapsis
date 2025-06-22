@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/hinha/library-management-synapsis/cmd/config"
+	"github.com/hinha/library-management-synapsis/internal/domain"
 	"github.com/hinha/library-management-synapsis/internal/domain/user"
 	"golang.org/x/crypto/bcrypt"
 	"log"
@@ -37,11 +38,11 @@ func (s *UserSeeder) SeedUsers(ctx context.Context) error {
 			return err
 		}
 
-		adminUser := &user.User{
+		adminUser := &domain.User{
 			Name:     "Admin",
 			Email:    config.InitialAdminEmail,
 			Password: string(hashedPassword),
-			Role:     user.RoleAdmin,
+			Role:     domain.RoleAdmin,
 		}
 
 		if err := s.userRepo.Create(ctx, adminUser); err != nil {

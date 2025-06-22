@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/hinha/library-management-synapsis/internal/domain"
 	"testing"
 	"time"
 
@@ -109,7 +110,7 @@ func TestCacheRepository_SaveUser(t *testing.T) {
 	testCases := []struct {
 		name          string
 		setup         func(mockClient *MockRedisClient)
-		user          *User
+		user          *domain.User
 		expectedError error
 	}{
 		{
@@ -119,7 +120,7 @@ func TestCacheRepository_SaveUser(t *testing.T) {
 				cmd.SetVal("OK")
 				mockClient.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(cmd)
 			},
-			user:          &User{ID: 1, Name: "testuser"},
+			user:          &domain.User{ID: 1, Name: "testuser"},
 			expectedError: nil,
 		},
 		{
@@ -129,7 +130,7 @@ func TestCacheRepository_SaveUser(t *testing.T) {
 				cmd.SetErr(errors.New("redis set error"))
 				mockClient.On("Set", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(cmd)
 			},
-			user:          &User{ID: 2, Name: "failuser"},
+			user:          &domain.User{ID: 2, Name: "failuser"},
 			expectedError: errors.New("redis set error"),
 		},
 	}
@@ -163,20 +164,20 @@ func TestCacheRepository_GetUser(t *testing.T) {
 		name          string
 		setup         func(mockClient *MockRedisClient)
 		id            uint
-		expectedUser  *User
+		expectedUser  *domain.User
 		expectedError error
 	}{
 		{
 			name: "Success",
 			setup: func(mockClient *MockRedisClient) {
-				user := &User{ID: 1, Name: "testuser"}
+				user := &domain.User{ID: 1, Name: "testuser"}
 				data, _ := json.Marshal(user)
 				cmd := redis.NewStringCmd(context.Background())
 				cmd.SetVal(string(data))
 				mockClient.On("Get", mock.Anything, mock.Anything).Return(cmd)
 			},
 			id:            1,
-			expectedUser:  &User{ID: 1, Name: "testuser"},
+			expectedUser:  &domain.User{ID: 1, Name: "testuser"},
 			expectedError: nil,
 		},
 		{

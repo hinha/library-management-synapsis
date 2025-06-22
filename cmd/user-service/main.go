@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/hinha/library-management-synapsis/internal/domain"
 	"github.com/hinha/library-management-synapsis/internal/infrastructure/persistance"
 	"github.com/hinha/library-management-synapsis/pkg/logger"
 	"net"
@@ -46,7 +47,7 @@ func main() {
 	defer dbClose.Close()
 
 	// Auto migrate the schema
-	if err := db.AutoMigrate(&user.User{}); err != nil {
+	if err := db.AutoMigrate(&domain.User{}); err != nil {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	pb "github.com/hinha/library-management-synapsis/gen/api/proto/user"
+	"github.com/hinha/library-management-synapsis/internal/domain"
 	"strconv"
 	"time"
 
@@ -25,11 +26,11 @@ type JWTConfig struct {
 
 // Service defines the interface for user business logic
 type Service interface {
-	Register(ctx context.Context, name, email, password string, isAdmin bool) (*User, error)
+	Register(ctx context.Context, name, email, password string, isAdmin bool) (*domain.User, error)
 	Login(ctx context.Context, email, password string) (string, string, error)
-	GetUser(ctx context.Context, id string) (*User, error)
-	UpdateUser(ctx context.Context, id, name, email string) (*User, error)
-	ValidateToken(token string) (*Claims, error)
+	GetUser(ctx context.Context, id string) (*domain.User, error)
+	UpdateUser(ctx context.Context, id, name, email string) (*domain.User, error)
+	ValidateToken(ctx context.Context, token string) (*Claims, error)
 	Health(ctx context.Context) (*pb.HealthCheckResponse, error)
 }
 
@@ -58,15 +59,15 @@ func NewService(repoDb IDbRepository, repoCache ICacheRepository, jwtConfig JWTC
 }
 
 // Register registers a new user
-func (s *DefaultService) Register(ctx context.Context, name, email, password string, isAdmin bool) (*User, error) {
-	var role Role
+func (s *DefaultService) Register(ctx context.Context, name, email, password string, isAdmin bool) (*domain.User, error) {
+	var role domain.Role
 	if isAdmin {
-		role = RoleAdmin
+		role = domain.RoleAdmin
 	} else {
-		role = RoleOperation
+		role = domain.RoleOperation
 	}
 
-	user, err := NewUser(name, email, password, role)
+	user, err := domain.NewUser(name, email, password, role)
 	if err != nil {
 		return nil, err
 	}
@@ -119,12 +120,12 @@ func (s *DefaultService) Login(ctx context.Context, email, password string) (str
 }
 
 // GetUser retrieves a user by ID
-func (s *DefaultService) GetUser(ctx context.Context, id string) (*User, error) {
+func (s *DefaultService) GetUser(ctx context.Context, id string) (*domain.User, error) {
 	return s.repoDb.GetByID(ctx, id)
 }
 
 // UpdateUser updates a user's information
-func (s *DefaultService) UpdateUser(ctx context.Context, id, name, email string) (*User, error) {
+func (s *DefaultService) UpdateUser(ctx context.Context, id, name, email string) (*domain.User, error) {
 	user, err := s.repoDb.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -155,7 +156,7 @@ func (s *DefaultService) UpdateUser(ctx context.Context, id, name, email string)
 }
 
 // ValidateToken validates a JWT token and returns the claims
-func (s *DefaultService) ValidateToken(tokenString string) (*Claims, error) {
+func (s *DefaultService) ValidateToken(ctx context.Context, tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(s.jwtConfig.SecretKey), nil
@@ -166,6 +167,21 @@ func (s *DefaultService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	if !token.Valid {
+		return nil, ErrUnauthorized
+	}
+
+	userID, _ := strconv.Atoi(claims.UserID)
+	userCache, err := s.repoCache.GetUser(ctx, uint(userID))
+	if err != nil {
+		return nil, ErrUnauthorized
+	}
+
+	user, err := s.repoDb.GetByID(ctx, strconv.Itoa(int(userCache.ID)))
+	if err != nil {
+		return nil, ErrUnauthorized
+	}
+
+	if !user.Active {
 		return nil, ErrUnauthorized
 	}
 

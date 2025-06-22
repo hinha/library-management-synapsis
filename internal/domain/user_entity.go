@@ -1,6 +1,7 @@
-package user
+package domain
 
 import (
+	"errors"
 	"strconv"
 	"time"
 
@@ -34,6 +35,9 @@ type User struct {
 
 // NewUser creates a new user entity
 func NewUser(name, email, password string, role Role) (*User, error) {
+	if name == "" || email == "" || password == "" {
+		return nil, errors.New("invalid user data")
+	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
@@ -67,4 +71,8 @@ func (u *User) ToProto() *pb.UserResponse {
 // IsAdmin returns true if the user has admin role
 func (u *User) IsAdmin() bool {
 	return u.Role == RoleAdmin
+}
+
+func (u *User) UserIDString() string {
+	return strconv.Itoa(int(u.ID))
 }
