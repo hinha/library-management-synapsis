@@ -307,6 +307,20 @@
         "USER_ROLE_OPERATION"
       ],
       "default": "USER_ROLE_UNSPECIFIED"
+    },
+    "userValidateTokenResponse": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/definitions/userUserRole"
+        },
+        "isValid": {
+          "type": "boolean"
+        }
+      }
     }
   }
 }

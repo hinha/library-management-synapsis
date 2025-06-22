@@ -455,3 +455,104 @@ func TestNewUserHandler(t *testing.T) {
 	assert.NotNil(t, handler)
 	assert.Equal(t, mockSvc, handler.service)
 }
+
+func TestUserHandler_ValidateToken(t *testing.T) {
+	mockClaims := &userEntity.Claims{
+		UserID: "1",
+		Role:   string(domain.RoleOperation),
+	}
+	tests := []struct {
+		name       string
+		req        *pb.ValidateTokenRequest
+		mockSetup  func(svc *mocks.IService)
+		want       *pb.ValidateTokenResponse
+		wantErr    bool
+		statusCode codes.Code
+	}{
+		{
+			name: "success operation",
+			req:  &pb.ValidateTokenRequest{Token: "valid-token"},
+			mockSetup: func(svc *mocks.IService) {
+				svc.On("ValidateToken", mock.Anything, "valid-token").
+					Return(mockClaims, nil)
+			},
+			want: &pb.ValidateTokenResponse{
+				UserId:  "1",
+				Role:    pb.UserRole_USER_ROLE_OPERATION,
+				IsValid: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "success admin",
+			req:  &pb.ValidateTokenRequest{Token: "admin-token"},
+			mockSetup: func(svc *mocks.IService) {
+				svc.On("ValidateToken", mock.Anything, "admin-token").
+					Return(&userEntity.Claims{
+						UserID: "2",
+						Role:   string(domain.RoleAdmin),
+					}, nil)
+			},
+			want: &pb.ValidateTokenResponse{
+				UserId:  "2",
+				Role:    pb.UserRole_USER_ROLE_ADMIN,
+				IsValid: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid token",
+			req:  &pb.ValidateTokenRequest{Token: "bad-token"},
+			mockSetup: func(svc *mocks.IService) {
+				svc.On("ValidateToken", mock.Anything, "bad-token").
+					Return(nil, errors.New("invalid token"))
+			},
+			want:       nil,
+			wantErr:    true,
+			statusCode: codes.Unauthenticated,
+		},
+		{
+			name: "unspecified role",
+			req:  &pb.ValidateTokenRequest{Token: "unspecified-token"},
+			mockSetup: func(svc *mocks.IService) {
+				svc.On("ValidateToken", mock.Anything, "unspecified-token").
+					Return(&userEntity.Claims{
+						UserID: "3",
+						Role:   "unknown",
+					}, nil)
+			},
+			want: &pb.ValidateTokenResponse{
+				UserId:  "3",
+				Role:    pb.UserRole_USER_ROLE_UNSPECIFIED,
+				IsValid: true,
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockSvc := new(mocks.IService)
+			if tt.mockSetup != nil {
+				tt.mockSetup(mockSvc)
+			}
+			h := &UserHandler{
+				service: mockSvc,
+			}
+			got, err := h.ValidateToken(context.Background(), tt.req)
+			if tt.wantErr {
+				assert.Error(t, err)
+				if tt.statusCode != 0 {
+					st, ok := status.FromError(err)
+					assert.True(t, ok)
+					assert.Equal(t, tt.statusCode, st.Code())
+				}
+				assert.Nil(t, got)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, got)
+			}
+			mockSvc.AssertExpectations(t)
+		})
+	}
+}

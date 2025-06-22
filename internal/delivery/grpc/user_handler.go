@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	pb "github.com/hinha/library-management-synapsis/gen/api/proto/user"
+	"github.com/hinha/library-management-synapsis/internal/domain"
 	"github.com/hinha/library-management-synapsis/internal/domain/user"
 	"github.com/hinha/library-management-synapsis/pkg/validator"
 	"github.com/rs/zerolog/log"
@@ -94,6 +95,28 @@ func (h *UserHandler) Update(ctx context.Context, req *pb.UpdateUserRequest) (*p
 	}
 
 	return u.ToProto(), nil
+}
+
+func (h *UserHandler) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
+	claims, err := h.service.ValidateToken(ctx, req.Token)
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "invalid token")
+	}
+
+	var role pb.UserRole
+	if domain.Role(claims.Role) == domain.RoleAdmin {
+		role = pb.UserRole_USER_ROLE_ADMIN
+	} else if domain.Role(claims.Role) == domain.RoleOperation {
+		role = pb.UserRole_USER_ROLE_OPERATION
+	} else {
+		role = pb.UserRole_USER_ROLE_UNSPECIFIED
+	}
+
+	return &pb.ValidateTokenResponse{
+		UserId:  claims.UserID,
+		Role:    role,
+		IsValid: true,
+	}, nil
 }
 
 func (h *UserHandler) HealthCheck(ctx context.Context, _ *pb.HealthCheckRequest) (*pb.HealthCheckResponse, error) {
