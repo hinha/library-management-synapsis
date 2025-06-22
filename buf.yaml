@@ -3,6 +3,7 @@ version: v2
 name: github.com/hinha/library-management-synapsis
 deps:
   - buf.build/googleapis/googleapis
+  - buf.build/srikrsna/protoc-gen-gotag
 lint:
   use:
     - DEFAULT
