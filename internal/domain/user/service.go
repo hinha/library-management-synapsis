@@ -26,7 +26,7 @@ type JWTConfig struct {
 
 // IService defines the interface for user business logic
 //
-//go:generate mockery --name=IService --output=mocks --outpkg=mocks
+//go:generate mockery --name=IService --output=../../delivery/mocks --outpkg=mocks
 type IService interface {
 	Register(ctx context.Context, name, email, password string, isAdmin bool) (*domain.User, error)
 	Login(ctx context.Context, email, password string) (string, string, error)
