@@ -21,13 +21,13 @@ const (
 
 // User represents a user entity in the system
 type User struct {
-	ID        uint           `gorm:"primaryKey"`
-	Name      string         `gorm:"not null"`
-	Email     string         `gorm:"uniqueIndex;size:255;not null"`
-	Password  string         `gorm:"size:255;not null"`
-	Role      Role           `gorm:"not null;default:'operation'"`
-	Active    bool           `gorm:"default:true"`
-	CreatedAt time.Time      `gorm:"not null"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	Name      string         `gorm:"not null" json:"name"`
+	Email     string         `gorm:"uniqueIndex;size:255;not null" json:"email"`
+	Password  string         `gorm:"size:255;not null" json:"-"`
+	Role      Role           `gorm:"not null;default:'operation'" json:"role"`
+	Active    bool           `gorm:"default:true" json:"active"`
+	CreatedAt time.Time      `gorm:"not null" json:"created_at"`
 	UpdatedAt time.Time      `gorm:"not null"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }

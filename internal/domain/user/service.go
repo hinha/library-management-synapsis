@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"errors"
+	pb "github.com/hinha/library-management-synapsis/gen/api/proto/user"
 	"strconv"
 	"time"
 
@@ -29,6 +30,7 @@ type Service interface {
 	GetUser(ctx context.Context, id string) (*User, error)
 	UpdateUser(ctx context.Context, id, name, email string) (*User, error)
 	ValidateToken(token string) (*Claims, error)
+	Health(ctx context.Context) (*pb.HealthCheckResponse, error)
 }
 
 // Claims represents the JWT claims
@@ -41,14 +43,16 @@ type Claims struct {
 
 // DefaultService implements Service
 type DefaultService struct {
-	repo      IRepository
+	repoDb    IDbRepository
+	repoCache ICacheRepository
 	jwtConfig JWTConfig
 }
 
 // NewService creates a new DefaultService
-func NewService(repo IRepository, jwtConfig JWTConfig) *DefaultService {
+func NewService(repoDb IDbRepository, repoCache ICacheRepository, jwtConfig JWTConfig) *DefaultService {
 	return &DefaultService{
-		repo:      repo,
+		repoDb:    repoDb,
+		repoCache: repoCache,
 		jwtConfig: jwtConfig,
 	}
 }
@@ -67,7 +71,7 @@ func (s *DefaultService) Register(ctx context.Context, name, email, password str
 		return nil, err
 	}
 
-	if err := s.repo.Create(ctx, user); err != nil {
+	if err := s.repoDb.Create(ctx, user); err != nil {
 		return nil, err
 	}
 
@@ -76,7 +80,7 @@ func (s *DefaultService) Register(ctx context.Context, name, email, password str
 
 // Login authenticates a user and returns a JWT token
 func (s *DefaultService) Login(ctx context.Context, email, password string) (string, string, error) {
-	user, err := s.repo.GetByEmail(ctx, email)
+	user, err := s.repoDb.GetByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) {
 			return "", "", ErrInvalidCredentials
@@ -106,17 +110,22 @@ func (s *DefaultService) Login(ctx context.Context, email, password string) (str
 		return "", "", err
 	}
 
+	// Store token in a cache with expiration
+	if err := s.repoCache.SaveUser(ctx, user); err != nil {
+		return "", "", err
+	}
+
 	return signedToken, expiresAt.String(), nil
 }
 
 // GetUser retrieves a user by ID
 func (s *DefaultService) GetUser(ctx context.Context, id string) (*User, error) {
-	return s.repo.GetByID(ctx, id)
+	return s.repoDb.GetByID(ctx, id)
 }
 
 // UpdateUser updates a user's information
 func (s *DefaultService) UpdateUser(ctx context.Context, id, name, email string) (*User, error) {
-	user, err := s.repo.GetByID(ctx, id)
+	user, err := s.repoDb.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +136,7 @@ func (s *DefaultService) UpdateUser(ctx context.Context, id, name, email string)
 
 	if email != "" && email != user.Email {
 		// Check if email is already taken
-		_, err := s.repo.GetByEmail(ctx, email)
+		_, err := s.repoDb.GetByEmail(ctx, email)
 		if err == nil {
 			return nil, ErrEmailAlreadyExists
 		} else if !errors.Is(err, ErrUserNotFound) {
@@ -138,7 +147,7 @@ func (s *DefaultService) UpdateUser(ctx context.Context, id, name, email string)
 
 	user.UpdatedAt = time.Now()
 
-	if err := s.repo.Update(ctx, user); err != nil {
+	if err := s.repoDb.Update(ctx, user); err != nil {
 		return nil, err
 	}
 
@@ -161,4 +170,44 @@ func (s *DefaultService) ValidateToken(tokenString string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+func (s *DefaultService) Health(ctx context.Context) (*pb.HealthCheckResponse, error) {
+	status := "HEALTHY"
+
+	var componentStatus []*pb.ComponentStatus
+	if err := s.repoDb.Ping(ctx); err != nil {
+		status = "UNHEALTHY"
+		componentStatus = append(componentStatus, &pb.ComponentStatus{
+			Name:    "db",
+			Status:  "DOWN",
+			Message: err.Error(),
+		})
+	} else {
+		componentStatus = append(componentStatus, &pb.ComponentStatus{
+			Name:    "db",
+			Status:  "UP",
+			Message: "Database is healthy",
+		})
+	}
+
+	if err := s.repoCache.Ping(ctx); err != nil {
+		status = "UNHEALTHY"
+		componentStatus = append(componentStatus, &pb.ComponentStatus{
+			Name:    "cache",
+			Status:  "DOWN",
+			Message: err.Error(),
+		})
+	} else {
+		componentStatus = append(componentStatus, &pb.ComponentStatus{
+			Name:    "cache",
+			Status:  "UP",
+			Message: "Cache is healthy",
+		})
+	}
+
+	return &pb.HealthCheckResponse{
+		Status:     status,
+		Components: componentStatus,
+	}, nil
 }

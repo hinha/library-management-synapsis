@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"github.com/hinha/library-management-synapsis/internal/infrastructure/persistance"
 	"github.com/hinha/library-management-synapsis/pkg/logger"
 	"net"
 	"net/http"
@@ -12,41 +12,38 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/rs/zerolog/log"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-
 	"github.com/hinha/library-management-synapsis/cmd/config"
 	pb "github.com/hinha/library-management-synapsis/gen/api/proto/user"
 	grpcHandler "github.com/hinha/library-management-synapsis/internal/delivery/grpc"
 	"github.com/hinha/library-management-synapsis/internal/domain/user"
 	"github.com/hinha/library-management-synapsis/internal/seeder"
+	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
 	// Load user service configuration
 	cfg := config.LoadUserServiceConfig()
 
-	// Database connection
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
-		cfg.DbHost,
-		cfg.DbUser,
-		cfg.DbPassword,
-		cfg.DbName,
-		cfg.DbPort,
-	)
-
 	gormLogger, grpcInterceptor, httpMiddleware := logger.NewLogger()
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: gormLogger,
-	})
+	rdsClient, err := persistance.NewRedisConnection(cfg)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to Redis")
+	}
+	defer rdsClient.Close()
+
+	// Initialize database connection
+	db, err := persistance.NewDatabaseConnection(cfg, gormLogger)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to database")
 	}
+	dbClose, err := db.DB()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to get database connection")
+	}
+	defer dbClose.Close()
 
 	// Auto migrate the schema
 	if err := db.AutoMigrate(&user.User{}); err != nil {
@@ -54,10 +51,11 @@ func main() {
 	}
 
 	// Initialize repositories
-	userRepo := user.NewUserRepository(db)
+	userRepoCache := user.NewCacheRepository(rdsClient)
+	userRepoDb := user.NewDbRepository(db)
 
 	// Initialize and run seeder
-	userSeeder := seeder.NewUserSeeder(userRepo)
+	userSeeder := seeder.NewUserSeeder(userRepoDb)
 	if err := userSeeder.Seed(context.Background()); err != nil {
 		log.Error().Err(err).Msg("Failed to seed database")
 	}
@@ -65,9 +63,9 @@ func main() {
 	// Initialize services
 	jwtConfig := user.JWTConfig{
 		SecretKey:     cfg.JwtSecret,
-		TokenDuration: time.Hour * 24, // 1 day
+		TokenDuration: config.JwtTokenExpiration,
 	}
-	userService := user.NewService(userRepo, jwtConfig)
+	userService := user.NewService(userRepoDb, userRepoCache, jwtConfig)
 
 	// Initialize gRPC handlers
 	userHandler := grpcHandler.NewUserHandler(userService)

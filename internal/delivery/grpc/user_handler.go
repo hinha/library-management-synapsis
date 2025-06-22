@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/hinha/library-management-synapsis/pkg/validator"
+	"github.com/rs/zerolog/log"
 	"strings"
 
 	pb "github.com/hinha/library-management-synapsis/gen/api/proto/user"
@@ -44,6 +45,7 @@ func (h *UserHandler) Register(ctx context.Context, req *pb.RegisterRequest) (*p
 		if errors.Is(err, domain.ErrEmailAlreadyExists) {
 			return nil, status.Error(codes.AlreadyExists, "email already exists")
 		}
+		log.Debug().Err(err).Msg("failed to login")
 		return nil, status.Error(codes.Internal, "failed to register user")
 	}
 
@@ -58,6 +60,7 @@ func (h *UserHandler) Login(ctx context.Context, req *pb.LoginRequest) (*pb.Logi
 		if errors.Is(err, domain.ErrInvalidCredentials) {
 			return nil, status.Error(codes.Unauthenticated, "invalid credentials")
 		}
+		log.Debug().Err(err).Msg("failed to login")
 		return nil, status.Error(codes.Internal, "failed to login")
 	}
 
@@ -138,4 +141,8 @@ func (h *UserHandler) Update(ctx context.Context, req *pb.UpdateUserRequest) (*p
 	}
 
 	return u.ToProto(), nil
+}
+
+func (h *UserHandler) HealthCheck(ctx context.Context, _ *pb.HealthCheckRequest) (*pb.HealthCheckResponse, error) {
+	return h.service.Health(ctx)
 }

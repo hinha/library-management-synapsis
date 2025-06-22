@@ -53,6 +53,12 @@ service UserService {
       get: "/api/users/{id}"
     };
   }
+
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {
+    option (google.api.http) = {
+      get: "/health"
+    };
+  }
 }
 
 // Custom option for injecting Go struct tag
@@ -93,4 +99,17 @@ message UserResponse {
 message LoginResponse {
   string token = 1;
   string expired_at = 2;
+}
+
+message HealthCheckRequest {}
+
+message ComponentStatus {
+  string name = 1;
+  string status = 2; // "UP", "DOWN", "DEGRADED"
+  string message = 3 [(tags) = "json:\"message,omitempty\""];; // optional: "db connection, redis timeout"
+}
+
+message HealthCheckResponse {
+  repeated ComponentStatus components = 1;
+  string status = 2; // "HEALTHY", "DEGRADED", "UNHEALTHY"
 }

@@ -11,11 +11,11 @@ import (
 
 // UserSeeder handles database seeding
 type UserSeeder struct {
-	userRepo user.IRepository
+	userRepo user.IDbRepository
 }
 
 // NewUserSeeder creates a new seeder
-func NewUserSeeder(userRepo user.IRepository) *UserSeeder {
+func NewUserSeeder(userRepo user.IDbRepository) *UserSeeder {
 	return &UserSeeder{
 		userRepo: userRepo,
 	}

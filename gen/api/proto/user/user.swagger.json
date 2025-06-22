@@ -145,6 +145,28 @@
           "UserService"
         ]
       }
+    },
+    "/health": {
+      "get": {
+        "operationId": "UserService_HealthCheck",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/userHealthCheckResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "UserService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -187,6 +209,37 @@
             "type": "object",
             "$ref": "#/definitions/protobufAny"
           }
+        }
+      }
+    },
+    "userComponentStatus": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "title": "\"UP\", \"DOWN\", \"DEGRADED\""
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "userHealthCheckResponse": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/userComponentStatus"
+          }
+        },
+        "status": {
+          "type": "string",
+          "title": "\"HEALTHY\", \"DEGRADED\", \"UNHEALTHY\""
         }
       }
     },
