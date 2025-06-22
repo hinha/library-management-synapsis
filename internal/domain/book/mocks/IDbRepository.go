@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	book "github.com/hinha/library-management-synapsis/internal/domain"
 
+	domain "github.com/hinha/library-management-synapsis/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -15,7 +15,7 @@ type IDbRepository struct {
 }
 
 // Create provides a mock function with given fields: ctx, _a1
-func (_m *IDbRepository) Create(ctx context.Context, _a1 *book.Book) error {
+func (_m *IDbRepository) Create(ctx context.Context, _a1 *domain.Book) error {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
@@ -23,7 +23,7 @@ func (_m *IDbRepository) Create(ctx context.Context, _a1 *book.Book) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *book.Book) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Book) error); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		r0 = ret.Error(0)
@@ -51,23 +51,23 @@ func (_m *IDbRepository) Delete(ctx context.Context, id string) error {
 }
 
 // GetByCategory provides a mock function with given fields: ctx, category
-func (_m *IDbRepository) GetByCategory(ctx context.Context, category string) ([]*book.Book, error) {
+func (_m *IDbRepository) GetByCategory(ctx context.Context, category string) ([]*domain.Book, error) {
 	ret := _m.Called(ctx, category)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByCategory")
 	}
 
-	var r0 []*book.Book
+	var r0 []*domain.Book
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*book.Book, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*domain.Book, error)); ok {
 		return rf(ctx, category)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []*book.Book); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) []*domain.Book); ok {
 		r0 = rf(ctx, category)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*book.Book)
+			r0 = ret.Get(0).([]*domain.Book)
 		}
 	}
 
@@ -81,23 +81,23 @@ func (_m *IDbRepository) GetByCategory(ctx context.Context, category string) ([]
 }
 
 // GetByID provides a mock function with given fields: ctx, id
-func (_m *IDbRepository) GetByID(ctx context.Context, id string) (*book.Book, error) {
+func (_m *IDbRepository) GetByID(ctx context.Context, id string) (*domain.Book, error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByID")
 	}
 
-	var r0 *book.Book
+	var r0 *domain.Book
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*book.Book, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*domain.Book, error)); ok {
 		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *book.Book); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *domain.Book); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*book.Book)
+			r0 = ret.Get(0).(*domain.Book)
 		}
 	}
 
@@ -111,23 +111,23 @@ func (_m *IDbRepository) GetByID(ctx context.Context, id string) (*book.Book, er
 }
 
 // List provides a mock function with given fields: ctx
-func (_m *IDbRepository) List(ctx context.Context) ([]*book.Book, error) {
+func (_m *IDbRepository) List(ctx context.Context) ([]*domain.Book, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for List")
 	}
 
-	var r0 []*book.Book
+	var r0 []*domain.Book
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]*book.Book, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) ([]*domain.Book, error)); ok {
 		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context) []*book.Book); ok {
+	if rf, ok := ret.Get(0).(func(context.Context) []*domain.Book); ok {
 		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*book.Book)
+			r0 = ret.Get(0).([]*domain.Book)
 		}
 	}
 
@@ -159,7 +159,7 @@ func (_m *IDbRepository) Ping(ctx context.Context) error {
 }
 
 // Update provides a mock function with given fields: ctx, _a1
-func (_m *IDbRepository) Update(ctx context.Context, _a1 *book.Book) error {
+func (_m *IDbRepository) Update(ctx context.Context, _a1 *domain.Book) error {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
@@ -167,7 +167,7 @@ func (_m *IDbRepository) Update(ctx context.Context, _a1 *book.Book) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *book.Book) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.Book) error); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		r0 = ret.Error(0)

@@ -1,0 +1,249 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/proto/transaction/transaction.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "TransactionService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/api/transactions/borrow": {
+      "post": {
+        "operationId": "TransactionService_Borrow",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/transactionTransactionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/transactionBorrowRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionService"
+        ]
+      }
+    },
+    "/api/transactions/return": {
+      "post": {
+        "operationId": "TransactionService_Return",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/transactionTransactionResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/transactionReturnRequest"
+            }
+          }
+        ],
+        "tags": [
+          "TransactionService"
+        ]
+      }
+    },
+    "/api/transactions/user/{userId}": {
+      "get": {
+        "operationId": "TransactionService_History",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/transactionHistoryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "TransactionService"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "TransactionService_HealthCheck",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/transactionHealthCheckResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "TransactionService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": {}
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "transactionBorrowRequest": {
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string"
+        },
+        "bookId": {
+          "type": "string"
+        }
+      }
+    },
+    "transactionComponentStatus": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "title": "\"UP\", \"DOWN\", \"DEGRADED\""
+        },
+        "message": {
+          "type": "string",
+          "title": "optional: \"db connection, redis timeout\""
+        }
+      }
+    },
+    "transactionHealthCheckResponse": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/transactionComponentStatus"
+          }
+        },
+        "status": {
+          "type": "string",
+          "title": "\"HEALTHY\", \"DEGRADED\", \"UNHEALTHY\""
+        }
+      }
+    },
+    "transactionHistoryResponse": {
+      "type": "object",
+      "properties": {
+        "transactions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/transactionTransactionResponse"
+          }
+        }
+      }
+    },
+    "transactionReturnRequest": {
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "type": "string"
+        }
+      }
+    },
+    "transactionTransactionResponse": {
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "bookId": {
+          "type": "string"
+        },
+        "borrowedAt": {
+          "type": "string"
+        },
+        "returnedAt": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

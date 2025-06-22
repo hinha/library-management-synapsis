@@ -25,6 +25,7 @@ install-plugins:
 generate:
 	buf generate
 	./gotag.sh
+	go generate ./...
 
 # Lint proto files using buf
 lint:

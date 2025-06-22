@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package transaction;
+
+import "google/api/annotations.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/descriptor.proto";
+import "third_party/tagger/tagger.proto";
+
+option go_package = "github.com/hinha/library-management-synapsis/gen/transaction";
+
+service TransactionService {
+  rpc Borrow(BorrowRequest) returns (TransactionResponse) {
+    option (google.api.http) = {
+      post: "/api/transactions/borrow"
+      body: "*"
+    };
+  }
+
+  rpc Return(ReturnRequest) returns (TransactionResponse) {
+    option (google.api.http) = {
+      post: "/api/transactions/return"
+      body: "*"
+    };
+  }
+
+  rpc History(HistoryRequest) returns (HistoryResponse) {
+    option (google.api.http) = {
+      get: "/api/transactions/user/{user_id}"
+    };
+  }
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {
+    option (google.api.http) = {
+      get: "/health"
+    };
+  }
+}
+
+message BorrowRequest {
+  string user_id = 1 [(tagger.tags) = "validate:\"required\""];
+  string book_id = 2 [(tagger.tags) = "validate:\"required\""];
+}
+
+message ReturnRequest {
+  string transaction_id = 1 [(tagger.tags) = "validate:\"required\""];
+}
+
+message HistoryRequest {
+  string user_id = 1 [(tagger.tags) = "validate:\"required\""];
+}
+
+message TransactionResponse {
+  string transaction_id = 1;
+  string user_id = 2;
+  string book_id = 3;
+  string borrowed_at = 4;
+  string returned_at = 5;
+}
+
+message HistoryResponse {
+  repeated TransactionResponse transactions = 1;
+}
+
+message HealthCheckRequest {}
+
+message ComponentStatus {
+  string name = 1;
+  string status = 2; // "UP", "DOWN", "DEGRADED"
+  string message = 3; // optional: "db connection, redis timeout"
+}
+
+message HealthCheckResponse {
+  repeated ComponentStatus components = 1;
+  string status = 2; // "HEALTHY", "DEGRADED", "UNHEALTHY"
+}

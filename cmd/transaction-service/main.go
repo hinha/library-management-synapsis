@@ -15,9 +15,9 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hinha/library-management-synapsis/cmd/config"
-	pb "github.com/hinha/library-management-synapsis/gen/api/proto/book"
+	pb "github.com/hinha/library-management-synapsis/gen/api/proto/transaction"
 	grpcHandler "github.com/hinha/library-management-synapsis/internal/delivery/grpc"
-	"github.com/hinha/library-management-synapsis/internal/domain/book"
+	"github.com/hinha/library-management-synapsis/internal/domain/transaction"
 	"github.com/hinha/library-management-synapsis/pkg/logger"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
@@ -31,13 +31,12 @@ func main() {
 		log.Info().Msg("Warning: .env file not found")
 	}
 
-	// Load book service configuration
-	cfg := config.LoadBookServiceConfig()
+	// Load transaction service configuration
+	cfg := config.LoadTransactionServiceConfig()
 
 	// Initialize loggers
 	gormLogger, grpcInterceptor, httpMiddleware := logger.NewLogger()
 
-	// Initialize database connection
 	db, err := persistance.NewDatabaseConnection(cfg, gormLogger)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to database")
@@ -49,32 +48,43 @@ func main() {
 	defer dbClose.Close()
 
 	// Auto migrate the schema
-	if err := db.AutoMigrate(&domain.Book{}); err != nil {
+	if err := db.AutoMigrate(&domain.Transaction{}); err != nil {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	grpcClient, err := client.NewGRPCClient(ctx, config.SharedGrpcAuthServiceAddr)
-	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to connect to auth service")
-	}
-	defer grpcClient.Close()
 
-	middlewareHandler := middleware.NewMiddleware(nil, grpcClient)
+	// Connect to book service
+	bookConn, err := client.NewGRPCClient(ctx, config.SharedGrpcBookServiceAddr)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to book service")
+	}
+	defer bookConn.Close()
+
+	// Connect to auth service
+	authConn, err := client.NewGRPCClient(ctx, config.SharedGrpcAuthServiceAddr)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to book service")
+	}
+	defer bookConn.Close()
+
+	middlewareHandler := middleware.NewMiddleware(nil, authConn)
+	bookClient := middleware.NewBookServiceClient(bookConn)
+	bookRepo := middleware.NewBookRepositoryAdapter(bookClient)
 
 	// Initialize repositories
-	bookRepo := book.NewDbRepository(db)
+	transactionRepo := transaction.NewGormRepository(db)
 
 	// Initialize services
-	bookService := book.NewService(bookRepo)
+	transactionService := transaction.NewService(transactionRepo, bookRepo)
 
 	// Initialize gRPC handlers
-	bookHandler := grpcHandler.NewBookHandler(bookService)
+	transactionHandler := grpcHandler.NewTransactionHandler(transactionService)
 
 	// Start gRPC server
 	grpcReady := make(chan struct{})
-	go startGRPCServer(cfg.GrpcAddr, bookHandler, middlewareHandler, grpcInterceptor, grpcReady)
+	go startGRPCServer(cfg.GrpcAddr, transactionHandler, middlewareHandler, grpcInterceptor, grpcReady)
 
 	// Wait for gRPC server to be ready
 	<-grpcReady
@@ -86,16 +96,16 @@ func main() {
 	waitForTermination()
 }
 
-func startGRPCServer(addr string, bookHandler *grpcHandler.BookHandler, mw *middleware.Middleware, logUnary grpc.UnaryServerInterceptor, ready chan struct{}) {
+func startGRPCServer(addr string, transactionHandler *grpcHandler.TransactionHandler, mw *middleware.Middleware, logUnary grpc.UnaryServerInterceptor, ready chan struct{}) {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Failed to listen on %s", addr)
 	}
 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(logUnary, mw.CrossValidateToken()))
-	pb.RegisterBookServiceServer(s, bookHandler)
+	pb.RegisterTransactionServiceServer(s, transactionHandler)
 
-	log.Info().Msgf("Book service gRPC server listening at %v", lis.Addr())
+	log.Info().Msgf("Transaction service gRPC server listening at %v", lis.Addr())
 
 	// Signal that the server is ready
 	close(ready)
@@ -113,14 +123,14 @@ func startHTTPServer(httpAddr, grpcAddr string, httpMiddleware func(http.Handler
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-	if err := pb.RegisterBookServiceHandlerFromEndpoint(ctx, mux, grpcAddr, opts); err != nil {
+	if err := pb.RegisterTransactionServiceHandlerFromEndpoint(ctx, mux, grpcAddr, opts); err != nil {
 		log.Fatal().Err(err).Msg("Failed to register gateway")
 	}
 
 	// Apply HTTP middleware for logging
 	handler := httpMiddleware(mux)
 
-	log.Info().Msgf("Book service HTTP server listening at %v", httpAddr)
+	log.Info().Msgf("Transaction service HTTP server listening at %v", httpAddr)
 	if err := http.ListenAndServe(httpAddr, handler); err != nil {
 		log.Fatal().Err(err).Msg("Failed to serve HTTP")
 	}
@@ -130,5 +140,5 @@ func waitForTermination() {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
-	log.Info().Msg("Shutting down book service...")
+	log.Info().Msg("Shutting down transaction service...")
 }
