@@ -54,6 +54,8 @@ service UserService {
     };
   }
 
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse) {}
+
   rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {
     option (google.api.http) = {
       get: "/health"
@@ -99,6 +101,16 @@ message UserResponse {
 message LoginResponse {
   string token = 1;
   string expired_at = 2;
+}
+
+message ValidateTokenRequest {
+  string token = 1;
+}
+
+message ValidateTokenResponse {
+  string user_id = 1;
+  UserRole role = 2;
+  bool   is_valid = 3;
 }
 
 message HealthCheckRequest {}

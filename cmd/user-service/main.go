@@ -93,7 +93,7 @@ func startGRPCServer(addr string, userHandler *grpcHandler.UserHandler, mw *midd
 		log.Fatal().Err(err).Msgf("Failed to listen on %s", addr)
 	}
 
-	s := grpc.NewServer(grpc.ChainUnaryInterceptor(logUnary, mw.UnaryServerInterceptor()))
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(logUnary, mw.AuthValidateToken()))
 	pb.RegisterUserServiceServer(s, userHandler)
 
 	log.Info().Msgf("User service gRPC server listening at %v", lis.Addr())
