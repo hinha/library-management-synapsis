@@ -48,6 +48,8 @@ var (
 	JwtTokenExpiration, _ = time.ParseDuration(GetEnv("JWT_TOKEN_EXPIRATION", "24h"))
 
 	RedisKeyUserPrefix = GetEnv("REDIS_KEY_USER_PREFIX", "user:")
+
+	SharedGrpcAuthServiceAddr = GetEnv("USER_GRPC_ADDR", ":50051")
 )
 
 // LoadUserServiceConfig loads configuration for the user service

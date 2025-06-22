@@ -9,6 +9,10 @@ PROTOS = $(shell find $(PROTO_DIR) -name "*.proto")
 # Default target
 all: generate gotag swagger
 
+test:
+	go test ./... -cover -v -covermode=count -coverprofile=coverage.out 2>&1
+	go tool cover -func=coverage.out
+
 # Install required plugins
 install-plugins:
 	go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
