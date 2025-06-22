@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  user-service:
+    image: wapick/library-management-synapsis:1.0.1
+    container_name: user-service
+    command: ["/app/user-service"]
+    ports:
+      - "50051:50051"
+      - "6081:6081"
+    env_file: .env
+    networks:
+      - backend
+
+  book-service:
+    image: wapick/library-management-synapsis:1.0.1
+    container_name: book-service
+    command: ["/app/book-service"]
+    ports:
+      - "50052:50052"
+      - "6082:6082"
+    env_file: .env
+    depends_on:
+      - user-service
+    networks:
+      - backend
+
+  transaction-service:
+    image: wapick/library-management-synapsis:1.0.1
+    container_name: transaction-service
+    command: ["/app/transaction-service"]
+    ports:
+      - "50053:50053"
+      - "6083:6083"
+    env_file: .env
+    depends_on:
+      - user-service
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
