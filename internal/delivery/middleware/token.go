@@ -90,7 +90,8 @@ func (m *Middleware) CrossValidateToken() grpc.UnaryServerInterceptor {
 		}
 
 		whitelist := map[string]bool{
-			"/book.BookService/HealthCheck": true,
+			"/book.BookService/HealthCheck":               true,
+			"/transaction.TransactionService/HealthCheck": true,
 		}
 		if whitelist[info.FullMethod] {
 			return handler(ctx, req)

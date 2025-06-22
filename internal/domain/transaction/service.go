@@ -3,6 +3,7 @@ package transaction
 import (
 	"context"
 	"errors"
+	pb "github.com/hinha/library-management-synapsis/gen/api/proto/transaction"
 	"github.com/hinha/library-management-synapsis/internal/domain"
 
 	"github.com/hinha/library-management-synapsis/internal/domain/book"
@@ -20,6 +21,7 @@ type Service interface {
 	BorrowBook(ctx context.Context, userID, bookID string) (*domain.Transaction, error)
 	ReturnBook(ctx context.Context, transactionID string) (*domain.Transaction, error)
 	GetUserHistory(ctx context.Context, userID string) ([]*domain.Transaction, error)
+	Health(ctx context.Context) (*pb.HealthCheckResponse, error)
 }
 
 // BookRepository defines the interface for book operations needed by the transaction service
@@ -30,14 +32,14 @@ type BookRepository interface {
 
 // DefaultService implements Service
 type DefaultService struct {
-	repo     IDbRepository
+	repoDb   IDbRepository
 	bookRepo BookRepository
 }
 
 // NewService creates a new DefaultService
 func NewService(repo IDbRepository, bookRepo BookRepository) *DefaultService {
 	return &DefaultService{
-		repo:     repo,
+		repoDb:   repo,
 		bookRepo: bookRepo,
 	}
 }
@@ -63,7 +65,7 @@ func (s *DefaultService) BorrowBook(ctx context.Context, userID, bookID string) 
 
 	// Create transaction
 	transaction := domain.NewTransaction(userID, bookID)
-	if err := s.repo.Create(ctx, transaction); err != nil {
+	if err := s.repoDb.Create(ctx, transaction); err != nil {
 		return nil, err
 	}
 
@@ -82,7 +84,7 @@ func (s *DefaultService) ReturnBook(ctx context.Context, transactionID string) (
 	}
 
 	// Get transaction
-	transaction, err := s.repo.GetByID(ctx, transactionID)
+	transaction, err := s.repoDb.GetByID(ctx, transactionID)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +95,7 @@ func (s *DefaultService) ReturnBook(ctx context.Context, transactionID string) (
 	}
 
 	// Mark as returned
-	if err := s.repo.MarkAsReturned(ctx, transactionID); err != nil {
+	if err := s.repoDb.MarkAsReturned(ctx, transactionID); err != nil {
 		return nil, err
 	}
 
@@ -103,7 +105,7 @@ func (s *DefaultService) ReturnBook(ctx context.Context, transactionID string) (
 	}
 
 	// Get updated transaction
-	return s.repo.GetByID(ctx, transactionID)
+	return s.repoDb.GetByID(ctx, transactionID)
 }
 
 // GetUserHistory retrieves a user's transaction history
@@ -112,5 +114,30 @@ func (s *DefaultService) GetUserHistory(ctx context.Context, userID string) ([]*
 		return nil, ErrInvalidInput
 	}
 
-	return s.repo.GetByUserID(ctx, userID)
+	return s.repoDb.GetByUserID(ctx, userID)
+}
+
+func (s *DefaultService) Health(ctx context.Context) (*pb.HealthCheckResponse, error) {
+	status := "HEALTHY"
+
+	var componentStatus []*pb.ComponentStatus
+	if err := s.repoDb.Ping(ctx); err != nil {
+		status = "UNHEALTHY"
+		componentStatus = append(componentStatus, &pb.ComponentStatus{
+			Name:    "db",
+			Status:  "DOWN",
+			Message: err.Error(),
+		})
+	} else {
+		componentStatus = append(componentStatus, &pb.ComponentStatus{
+			Name:    "db",
+			Status:  "UP",
+			Message: "Database is healthy",
+		})
+	}
+
+	return &pb.HealthCheckResponse{
+		Status:     status,
+		Components: componentStatus,
+	}, nil
 }

@@ -95,3 +95,7 @@ func (h *TransactionHandler) History(ctx context.Context, req *pb.HistoryRequest
 
 	return response, nil
 }
+
+func (h *TransactionHandler) HealthCheck(ctx context.Context, _ *pb.HealthCheckRequest) (*pb.HealthCheckResponse, error) {
+	return h.service.Health(ctx)
+}
