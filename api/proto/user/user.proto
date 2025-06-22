@@ -5,18 +5,7 @@ package user;
 import "google/api/annotations.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/descriptor.proto";
-
-
-// Tags are applied at the field level
-extend google.protobuf.FieldOptions {
-  // Multiple Tags can be specified.
-  string tags = 847939;
-}
-
-extend google.protobuf.OneofOptions {
-  // Multiple Tags can be specified.
-  string oneof_tags = 847939;
-}
+import "third_party/tagger/tagger.proto";
 
 option go_package = "github.com/hinha/library-management-synapsis/gen/user";
 
@@ -68,10 +57,10 @@ extend google.protobuf.FieldOptions {
   string validate = 65001;
 }
 message RegisterRequest {
-  string name = 1 [(tags) = "validate:\"required,min=1,max=64\""];
-  string email = 2 [(tags) = "validate:\"required,email\""];
-  string password = 3 [(tags) = "validate:\"required,min=8\""];
-  UserRole role = 4 [(tags) = "validate:\"required,role\""];
+  string name = 1 [(tagger.tags) = "validate:\"required,min=1,max=64\""];
+  string email = 2 [(tagger.tags) = "validate:\"required,email\""];
+  string password = 3 [(tagger.tags) = "validate:\"required,min=8\""];
+  UserRole role = 4 [(tagger.tags) = "validate:\"required,role\""];
 }
 
 
@@ -118,7 +107,7 @@ message HealthCheckRequest {}
 message ComponentStatus {
   string name = 1;
   string status = 2; // "UP", "DOWN", "DEGRADED"
-  string message = 3 [(tags) = "json:\"message,omitempty\""];; // optional: "db connection, redis timeout"
+  string message = 3 [(tagger.tags) = "json:\"message,omitempty\""];; // optional: "db connection, redis timeout"
 }
 
 message HealthCheckResponse {
