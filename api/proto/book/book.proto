@@ -1,0 +1,83 @@
+syntax = "proto3";
+
+package book;
+
+import "google/api/annotations.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/descriptor.proto";
+import "third_party/tagger/tagger.proto";
+
+option go_package = "github.com/hinha/library-management-synapsis/gen/book";
+
+service BookService {
+  rpc Create(CreateBookRequest) returns (BookResponse) {
+    option (google.api.http) = {
+      post: "/api/books"
+      body: "*"
+    };
+  }
+
+  rpc ListBooks(ListBooksRequest) returns (ListBooksResponse) {
+    option (google.api.http) = {
+      get: "/api/books"
+    };
+  }
+
+  rpc GetBook(GetBookRequest) returns (BookResponse) {
+    option (google.api.http) = {
+      get: "/api/books/{id}"
+    };
+  }
+
+  rpc Recommend(RecommendRequest) returns (ListBooksResponse) {
+    option (google.api.http) = {
+      get: "/api/books/recommend"
+    };
+  }
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse) {
+    option (google.api.http) = {
+      get: "/health"
+    };
+  }
+}
+
+message CreateBookRequest {
+  string title = 1 [(tagger.tags) = "validate:\"required\""];
+  string author = 2 [(tagger.tags) = "validate:\"required\""];
+  string category = 3 [(tagger.tags) = "validate:\"required\""];
+  int32 stock = 4 [(tagger.tags) = "validate:\"required\""];
+}
+
+message GetBookRequest {
+  string id = 1 [(tagger.tags) = "validate:\"required\""];
+}
+
+message ListBooksRequest {}
+
+message RecommendRequest {}
+
+message BookResponse {
+  string id = 1;
+  string title = 2;
+  string author = 3;
+  string category = 4;
+  int32 stock = 5;
+}
+
+message ListBooksResponse {
+  repeated BookResponse books = 1;
+}
+
+message HealthCheckRequest {}
+
+message ComponentStatus {
+  string name = 1;
+  string status = 2; // "UP", "DOWN", "DEGRADED"
+  string message = 3; // optional: "db connection, redis timeout"
+}
+
+message HealthCheckResponse {
+  repeated ComponentStatus components = 1;
+  string status = 2; // "HEALTHY", "DEGRADED", "UNHEALTHY"
+}
+
