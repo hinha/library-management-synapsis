@@ -71,7 +71,7 @@ func main() {
 
 	// Initialize gRPC handlers
 	userHandler := grpcHandler.NewUserHandler(userService)
-	userMiddleware := middleware.NewUserMiddleware(userService)
+	userMiddleware := middleware.NewMiddleware(userService, nil)
 
 	// Start gRPC server
 	grpcReady := make(chan struct{})
