@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	user "github.com/hinha/library-management-synapsis/internal/domain"
 
+	domain "github.com/hinha/library-management-synapsis/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -15,7 +15,7 @@ type IDbRepository struct {
 }
 
 // Create provides a mock function with given fields: ctx, _a1
-func (_m *IDbRepository) Create(ctx context.Context, _a1 *user.User) error {
+func (_m *IDbRepository) Create(ctx context.Context, _a1 *domain.User) error {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
@@ -23,7 +23,7 @@ func (_m *IDbRepository) Create(ctx context.Context, _a1 *user.User) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *user.User) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.User) error); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		r0 = ret.Error(0)
@@ -51,23 +51,23 @@ func (_m *IDbRepository) Delete(ctx context.Context, id string) error {
 }
 
 // GetByEmail provides a mock function with given fields: ctx, email
-func (_m *IDbRepository) GetByEmail(ctx context.Context, email string) (*user.User, error) {
+func (_m *IDbRepository) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
 	ret := _m.Called(ctx, email)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByEmail")
 	}
 
-	var r0 *user.User
+	var r0 *domain.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*user.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*domain.User, error)); ok {
 		return rf(ctx, email)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *user.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *domain.User); ok {
 		r0 = rf(ctx, email)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*user.User)
+			r0 = ret.Get(0).(*domain.User)
 		}
 	}
 
@@ -81,23 +81,23 @@ func (_m *IDbRepository) GetByEmail(ctx context.Context, email string) (*user.Us
 }
 
 // GetByID provides a mock function with given fields: ctx, id
-func (_m *IDbRepository) GetByID(ctx context.Context, id string) (*user.User, error) {
+func (_m *IDbRepository) GetByID(ctx context.Context, id string) (*domain.User, error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetByID")
 	}
 
-	var r0 *user.User
+	var r0 *domain.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (*user.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*domain.User, error)); ok {
 		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) *user.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, string) *domain.User); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*user.User)
+			r0 = ret.Get(0).(*domain.User)
 		}
 	}
 
@@ -129,7 +129,7 @@ func (_m *IDbRepository) Ping(ctx context.Context) error {
 }
 
 // Update provides a mock function with given fields: ctx, _a1
-func (_m *IDbRepository) Update(ctx context.Context, _a1 *user.User) error {
+func (_m *IDbRepository) Update(ctx context.Context, _a1 *domain.User) error {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
@@ -137,7 +137,7 @@ func (_m *IDbRepository) Update(ctx context.Context, _a1 *user.User) error {
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *user.User) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.User) error); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		r0 = ret.Error(0)

@@ -4,8 +4,8 @@ package mocks
 
 import (
 	context "context"
-	user "github.com/hinha/library-management-synapsis/internal/domain"
 
+	domain "github.com/hinha/library-management-synapsis/internal/domain"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -15,23 +15,23 @@ type ICacheRepository struct {
 }
 
 // GetUser provides a mock function with given fields: ctx, id
-func (_m *ICacheRepository) GetUser(ctx context.Context, id uint) (*user.User, error) {
+func (_m *ICacheRepository) GetUser(ctx context.Context, id uint) (*domain.User, error) {
 	ret := _m.Called(ctx, id)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetUser")
 	}
 
-	var r0 *user.User
+	var r0 *domain.User
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint) (*user.User, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint) (*domain.User, error)); ok {
 		return rf(ctx, id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, uint) *user.User); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, uint) *domain.User); ok {
 		r0 = rf(ctx, id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*user.User)
+			r0 = ret.Get(0).(*domain.User)
 		}
 	}
 
@@ -63,7 +63,7 @@ func (_m *ICacheRepository) Ping(ctx context.Context) error {
 }
 
 // SaveUser provides a mock function with given fields: ctx, _a1
-func (_m *ICacheRepository) SaveUser(ctx context.Context, _a1 *user.User) error {
+func (_m *ICacheRepository) SaveUser(ctx context.Context, _a1 *domain.User) error {
 	ret := _m.Called(ctx, _a1)
 
 	if len(ret) == 0 {
@@ -71,7 +71,7 @@ func (_m *ICacheRepository) SaveUser(ctx context.Context, _a1 *user.User) error 
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *user.User) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *domain.User) error); ok {
 		r0 = rf(ctx, _a1)
 	} else {
 		r0 = ret.Error(0)

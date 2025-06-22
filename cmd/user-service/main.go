@@ -16,6 +16,7 @@ import (
 	"github.com/hinha/library-management-synapsis/cmd/config"
 	pb "github.com/hinha/library-management-synapsis/gen/api/proto/user"
 	grpcHandler "github.com/hinha/library-management-synapsis/internal/delivery/grpc"
+	"github.com/hinha/library-management-synapsis/internal/delivery/middleware"
 	"github.com/hinha/library-management-synapsis/internal/domain/user"
 	"github.com/hinha/library-management-synapsis/internal/seeder"
 	"github.com/rs/zerolog/log"
@@ -70,10 +71,11 @@ func main() {
 
 	// Initialize gRPC handlers
 	userHandler := grpcHandler.NewUserHandler(userService)
+	userMiddleware := middleware.NewUserMiddleware(userService)
 
 	// Start gRPC server
 	grpcReady := make(chan struct{})
-	go startGRPCServer(cfg.GrpcAddr, userHandler, grpcInterceptor, grpcReady)
+	go startGRPCServer(cfg.GrpcAddr, userHandler, userMiddleware, grpcInterceptor, grpcReady)
 
 	// Wait for gRPC server to be ready
 	<-grpcReady
@@ -85,13 +87,13 @@ func main() {
 	waitForTermination()
 }
 
-func startGRPCServer(addr string, userHandler *grpcHandler.UserHandler, logUnary grpc.UnaryServerInterceptor, ready chan struct{}) {
+func startGRPCServer(addr string, userHandler *grpcHandler.UserHandler, mw *middleware.Middleware, logUnary grpc.UnaryServerInterceptor, ready chan struct{}) {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal().Err(err).Msgf("Failed to listen on %s", addr)
 	}
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(logUnary))
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(logUnary, mw.UnaryServerInterceptor()))
 	pb.RegisterUserServiceServer(s, userHandler)
 
 	log.Info().Msgf("User service gRPC server listening at %v", lis.Addr())

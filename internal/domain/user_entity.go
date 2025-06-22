@@ -61,10 +61,19 @@ func (u *User) ComparePassword(password string) bool {
 
 // ToProto converts the user entity to a protobuf user response
 func (u *User) ToProto() *pb.UserResponse {
+	var role pb.UserRole
+	if u.Role == RoleAdmin {
+		role = pb.UserRole_USER_ROLE_ADMIN
+	} else if u.Role == RoleOperation {
+		role = pb.UserRole_USER_ROLE_OPERATION
+	} else {
+		role = pb.UserRole_USER_ROLE_UNSPECIFIED
+	}
 	return &pb.UserResponse{
 		Id:    strconv.Itoa(int(u.ID)),
 		Name:  u.Name,
 		Email: u.Email,
+		Role:  role,
 	}
 }
 

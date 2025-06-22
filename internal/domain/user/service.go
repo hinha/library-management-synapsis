@@ -24,8 +24,10 @@ type JWTConfig struct {
 	TokenDuration time.Duration
 }
 
-// Service defines the interface for user business logic
-type Service interface {
+// IService defines the interface for user business logic
+//
+//go:generate mockery --name=IService --output=mocks --outpkg=mocks
+type IService interface {
 	Register(ctx context.Context, name, email, password string, isAdmin bool) (*domain.User, error)
 	Login(ctx context.Context, email, password string) (string, string, error)
 	GetUser(ctx context.Context, id string) (*domain.User, error)
@@ -42,7 +44,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-// DefaultService implements Service
+// DefaultService implements IService
 type DefaultService struct {
 	repoDb    IDbRepository
 	repoCache ICacheRepository
