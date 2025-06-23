@@ -2,27 +2,25 @@ package main
 
 import (
 	"context"
-	"github.com/hinha/library-management-synapsis/internal/delivery/middleware"
-	"github.com/hinha/library-management-synapsis/internal/domain"
-	"github.com/hinha/library-management-synapsis/internal/infrastructure/client"
-	"github.com/hinha/library-management-synapsis/internal/infrastructure/persistance"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/hinha/library-management-synapsis/cmd/config"
 	pb "github.com/hinha/library-management-synapsis/gen/api/proto/transaction"
 	grpcHandler "github.com/hinha/library-management-synapsis/internal/delivery/grpc"
+	"github.com/hinha/library-management-synapsis/internal/delivery/middleware"
+	"github.com/hinha/library-management-synapsis/internal/domain"
 	"github.com/hinha/library-management-synapsis/internal/domain/transaction"
+	"github.com/hinha/library-management-synapsis/internal/infrastructure/client"
+	"github.com/hinha/library-management-synapsis/internal/infrastructure/persistance"
 	"github.com/hinha/library-management-synapsis/pkg/logger"
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -52,9 +50,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
+	ctx := context.Background()
 	// Connect to book service
 	bookConn, err := client.NewGRPCClient(ctx, config.SharedGrpcBookServiceAddr)
 	if err != nil {

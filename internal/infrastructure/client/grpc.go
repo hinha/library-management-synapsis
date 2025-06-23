@@ -12,10 +12,11 @@ func NewGRPCClient(ctx context.Context, address string) (*grpc.ClientConn, error
 		ctx,
 		address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithBlock(), // wait until ready
+		//grpc.WithBlock(), // wait until ready
 	)
 	if err != nil {
-		log.Fatal().Err(err).Str("address", address).Msg("failed to dial service")
+		log.Error().Err(err).Str("address", address).Msg("failed to dial service")
+		return nil, err
 	}
 
 	return conn, nil
