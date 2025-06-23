@@ -53,7 +53,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to migrate database")
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	grpcClient, err := client.NewGRPCClient(ctx, config.SharedGrpcAuthServiceAddr)
 	if err != nil {

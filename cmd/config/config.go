@@ -49,8 +49,8 @@ var (
 
 	RedisKeyUserPrefix = GetEnv("REDIS_KEY_USER_PREFIX", "user:")
 
-	SharedGrpcAuthServiceAddr = GetEnv("USER_GRPC_ADDR", ":50051")
-	SharedGrpcBookServiceAddr = GetEnv("BOOK_GRPC_ADDR", ":50052")
+	SharedGrpcAuthServiceAddr = GetEnv("CLIENT_USER_GRPC_ADDR", ":50051")
+	SharedGrpcBookServiceAddr = GetEnv("CLIENT_BOOK_GRPC_ADDR", ":50052")
 )
 
 // LoadUserServiceConfig loads configuration for the user service
